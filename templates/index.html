@@ -3,37 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>College Placement Info</title>
+    <title>College Suggested Product</title>
     <script>
         async function fetchCollegeInfo() {
-            const collegeName = document.getElementById('college-name').value;
-            if (!collegeName) {
-                alert('Please enter a college name');
+            // Get values from inputs and dropdown
+            const collegeName = document.getElementById('college-name').value.trim();
+            const collegeCity = document.getElementById('college-city').value.trim();
+            const courseType = document.getElementById('course-type').value;
+
+            // Validate inputs
+            const resultElement = document.getElementById('result');
+            if (!collegeName || !collegeCity) {
+                resultElement.textContent = "Please fill all fields to fetch result.";
                 return;
             }
 
-            const response = await fetch('/get_college_info', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ college_name: collegeName }),
-            });
+            // Send data to backend
+            try {
+                const response = await fetch('/get_college_info', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        college_name: collegeName,
+                        college_city: collegeCity,
+                        course_type: courseType,
+                    }),
+                });
 
-            const data = await response.json();
-            if (data.error) {
-                alert('Error: ' + data.error);
-            } else {
-                document.getElementById('result').textContent = data.details;
+                // Parse and handle response
+                const data = await response.json();
+                if (data.details) {
+                    resultElement.textContent = data.details; // Display fetched details
+                } else if (data.error) {
+                    resultElement.textContent = "Error: " + data.error; // Display backend error
+                } else {
+                    resultElement.textContent = "An unexpected error occurred. Please try again.";
+                }
+            } catch (error) {
+                resultElement.textContent = "Error: Unable to connect to the server.";
             }
         }
     </script>
 </head>
 <body>
-    <h1>College Placement Info</h1>
-    <input type="text" id="college-name" placeholder="Enter College Name" />
-    <button onclick="fetchCollegeInfo()">Get Info</button>
+    <h1>College Suggested Product</h1>
+
+    <!-- Text Box 1: Enter College Name -->
+    <label for="college-name">Enter College Name:</label>
+    <input type="text" id="college-name" placeholder="Enter College Name" /><br><br>
+
+    <!-- Text Box 2: Enter College City -->
+    <label for="college-city">Enter College City:</label>
+    <input type="text" id="college-city" placeholder="Enter College City" /><br><br>
+
+    <!-- Dropdown for Course Type -->
+    <label for="course-type">Select Course Type:</label>
+    <select id="course-type">
+        <option value="BTech">BTech</option>
+        <option value="BE">BE</option>
+        <option value="MBA">MBA</option>
+        <option value="PGDM">PGDM</option>
+    </select><br><br>
+
+    <!-- Button to Fetch Results -->
+    <button onclick="fetchCollegeInfo()">Fetch Result</button>
+
+    <!-- Section to Display Result -->
     <h2>Result:</h2>
-    <p id="result"></p>
+    <p id="result" style="font-weight: bold; color: #333;"></p>
 </body>
 </html>
