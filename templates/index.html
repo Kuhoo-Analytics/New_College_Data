@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College Placement Info</title>
+    <script>
+        async function fetchCollegeInfo() {
+            const collegeName = document.getElementById('college-name').value;
+            if (!collegeName) {
+                alert('Please enter a college name');
+                return;
+            }
+
+            const response = await fetch('/get_college_info', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ college_name: collegeName }),
+            });
+
+            const data = await response.json();
+            if (data.error) {
+                alert('Error: ' + data.error);
+            } else {
+                document.getElementById('result').textContent = data.details;
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>College Placement Info</h1>
+    <input type="text" id="college-name" placeholder="Enter College Name" />
+    <button onclick="fetchCollegeInfo()">Get Info</button>
+    <h2>Result:</h2>
+    <p id="result"></p>
+</body>
+</html>
