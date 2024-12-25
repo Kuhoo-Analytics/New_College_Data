@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, render_template
 import google.generativeai as genai
 import re
+import os  # For accessing environment variables
 
 # Configure the Gemini API
 genai.configure(api_key="AIzaSyD0OnFiXExV4ef8v8BqF_Y6agvdphgmDHM")
@@ -44,9 +45,9 @@ def determine_preferred_product(placement_percentage):
 def get_placement_info(college_name, college_city, course_type):
     # Prompt for the Gemini API
     prompt = f"What is the placement rate, i.e., out of total students admitted those that got placed (from any relevant source, for the most recent year):\
-for {course_type} at {college_name}, {college_city}.\
-In case no data can be retrieved, then return 'No relevant data is present' but only if no data point is available at all.\
-If any or multiple varying data points are available, then kindly provide the best estimate possible.\
+for {course_type} at {college_name}, {college_city}.\ 
+In case no data can be retrieved, then return 'No relevant data is present' but only if no data point is available at all.\ 
+If any or multiple varying data points are available, then kindly provide the best estimate possible.\ 
 The response should be only a specific number."
     
     # Call the Gemini API
@@ -89,6 +90,8 @@ def get_college_info():
     except Exception as e:
         return jsonify({"details": f"An error occurred: {str(e)}"}), 500
 
-# Run the app locally
+# Run the app with proper binding for Render
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Bind to the environment-provided port or default to 5000
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
