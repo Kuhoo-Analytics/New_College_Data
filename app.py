@@ -5,26 +5,33 @@ import os
 from googleapiclient.discovery import build
 from google.oauth2 import service_account
 import json
+from google.oauth2 import service_account
+import jwt
+
+# Google Sheets API Setup
+SHEET_ID = '12zBvHQEa25ifLOvmC0HWKhoID3qEMVe9Ul6Q5Krr1kA'  # Replace with your actual Sheet ID
+SCOPES = ['https://www.googleapis.com/auth/spreadsheets']  # Move SCOPES definition above
+
+# Add this logging at the top to debug environment variable and credentials
+SERVICE_ACCOUNT_CONTENT = os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON')
+
+if SERVICE_ACCOUNT_CONTENT:
+    try:
+        # Validate JSON format
+        service_account_info = json.loads(SERVICE_ACCOUNT_CONTENT)
+        print("Successfully loaded service account JSON.")
+        credentials = service_account.Credentials.from_service_account_info(service_account_info, scopes=SCOPES)
+        print(f"Using credentials for: {service_account_info['client_email']}")
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Invalid JSON in environment variable: {e}")
+else:
+    raise FileNotFoundError("GOOGLE_APPLICATION_CREDENTIALS_JSON environment variable is not set!")
 
 # Configure the Gemini API
 genai.configure(api_key="AIzaSyD0OnFiXExV4ef8v8BqF_Y6agvdphgmDHM")
 
 # Initialize the Flask app
 app = Flask(__name__)
-
-# Google Sheets API Setup
-SHEET_ID = '12zBvHQEa25ifLOvmC0HWKhoID3qEMVe9Ul6Q5Krr1kA'  # Replace with your actual Sheet ID
-SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
-
-# Use environment variable to handle the Google Service Account JSON file
-SERVICE_ACCOUNT_CONTENT = os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON')  # JSON as an env variable
-
-if SERVICE_ACCOUNT_CONTENT:
-    # Load credentials from the environment variable
-    service_account_info = json.loads(SERVICE_ACCOUNT_CONTENT)
-    credentials = service_account.Credentials.from_service_account_info(service_account_info, scopes=SCOPES)
-else:
-    raise FileNotFoundError("GOOGLE_APPLICATION_CREDENTIALS_JSON environment variable is not set!")
 
 # Function to update the Google Sheet
 def update_google_sheet(college_name, college_city, course_type, result):
@@ -38,12 +45,15 @@ def update_google_sheet(college_name, college_city, course_type, result):
         body = {'values': values}
         
         # Append data to the Google Sheet (start from the 2nd row)
-        sheet.values().append(
+        response = sheet.values().append(
             spreadsheetId=SHEET_ID,
             range='Sheet1!A2:D',  # Start appending from row 2 (columns A to D)
             valueInputOption='RAW',
             body=body
         ).execute()
+        # Log the response from Google Sheets API
+        print(f"Google Sheets append response: {response}")
+
     except Exception as e:
         print(f"Failed to update Google Sheet: {e}")
 
@@ -114,3 +124,19 @@ def get_college_info():
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
+
+# Debugging: Validate JWT token
+def debug_jwt_token(credentials):
+    try:
+        # Generate JWT token
+        token = credentials.token
+        print("Generated JWT Token:", token)
+        
+        # Decode the token to inspect its payload
+        decoded_token = jwt.decode(token, options={"verify_signature": False})
+        print("Decoded JWT Token:", decoded_token)
+    except Exception as e:
+        print("Failed to generate or decode JWT token:", e)
+
+debug_jwt_token(credentials)
+
