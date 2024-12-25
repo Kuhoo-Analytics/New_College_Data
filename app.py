@@ -4,6 +4,7 @@ import re
 import os
 from googleapiclient.discovery import build
 from google.oauth2 import service_account
+import json
 
 # Configure the Gemini API
 genai.configure(api_key="AIzaSyD0OnFiXExV4ef8v8BqF_Y6agvdphgmDHM")
@@ -12,14 +13,18 @@ genai.configure(api_key="AIzaSyD0OnFiXExV4ef8v8BqF_Y6agvdphgmDHM")
 app = Flask(__name__)
 
 # Google Sheets API Setup
-SERVICE_ACCOUNT_FILE = 'C:\\Users\\Akshat\\Desktop\\Python_Snippets\\My_Project_Flask\\new-college-data-48921a64fc39.json'  # Replace with your JSON key file
+SHEET_ID = '12zBvHQEa25ifLOvmC0HWKhoID3qEMVe9Ul6Q5Krr1kA'  # Replace with your actual Sheet ID
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
-credentials = service_account.Credentials.from_service_account_file(
-    SERVICE_ACCOUNT_FILE, scopes=SCOPES
-)
 
-# Google Sheet ID (Replace with your sheet's ID)
-SHEET_ID = '12zBvHQEa25ifLOvmC0HWKhoID3qEMVe9Ul6Q5Krr1kA'
+# Use environment variable to handle the Google Service Account JSON file
+SERVICE_ACCOUNT_CONTENT = os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON')  # JSON as an env variable
+
+if SERVICE_ACCOUNT_CONTENT:
+    # Load credentials from the environment variable
+    service_account_info = json.loads(SERVICE_ACCOUNT_CONTENT)
+    credentials = service_account.Credentials.from_service_account_info(service_account_info, scopes=SCOPES)
+else:
+    raise FileNotFoundError("GOOGLE_APPLICATION_CREDENTIALS_JSON environment variable is not set!")
 
 # Function to update the Google Sheet
 def update_google_sheet(college_name, college_city, course_type, result):
