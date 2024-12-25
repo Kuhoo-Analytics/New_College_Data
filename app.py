@@ -44,11 +44,13 @@ def determine_preferred_product(placement_percentage):
 # Define the function to fetch and process placement info
 def get_placement_info(college_name, college_city, course_type):
     # Prompt for the Gemini API
-    prompt = f"What is the placement rate, i.e., out of total students admitted those that got placed (from any relevant source, for the most recent year):\
-for {course_type} at {college_name}, {college_city}.\ 
-In case no data can be retrieved, then return 'No relevant data is present' but only if no data point is available at all.\ 
-If any or multiple varying data points are available, then kindly provide the best estimate possible.\ 
-The response should be only a specific number."
+    prompt = f"""
+    What is the placement rate, i.e., out of total students admitted those that got placed 
+    (from any relevant source, for the most recent year): for {course_type} at {college_name}, {college_city}.
+    In case no data can be retrieved, then return 'No relevant data is present' but only if no data point is available at all.
+    If any or multiple varying data points are available, then kindly provide the best estimate possible.
+    The response should be only a specific number.
+    """
     
     # Call the Gemini API
     response = genai.GenerativeModel('models/gemini-1.5-flash').generate_content(prompt, tools='google_search_retrieval')
